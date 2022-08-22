@@ -1,5 +1,6 @@
 import axios from 'axios';
-var localSeed = require('seed.json');
+import { captureRejectionSymbol } from 'events';
+var localSeed = require('./seed.json');
 
 interface Node {
     Name: string;
@@ -21,7 +22,7 @@ export class Nodes {
         this.topology = [];
     }
     ///////////////////////////////////
-    async init(seed: Array<string> | undefined) {
+    async init(seed?: Array<string>) {
         // cleanup
         this.nodeIndex = 0;
         this.committee.clear();
@@ -55,8 +56,29 @@ export class Nodes {
     }
     ///////////////////////////////////
     getNextNode(committeeOnly: Boolean) {
+        const startIndex = this.nodeIndex + 1;
+        while (this.nodeIndex != startIndex) {
+            if (this.nodeIndex > this.topology.length)
+                this.nodeIndex = 0;
+            // if any node is welcome, or node is in committee- return
+            if (!committeeOnly || this.committee.has(this.topology[this.nodeIndex].EthAddress))
+                return this.topology[this.nodeIndex];
+            // else continue            
+            this.nodeIndex++;
+        }
 
     }
     ///////////////////////////////////
     getRandomNode(committeeOnly: Boolean) {
+        this.topology.length;
+        let index = Math.floor(Math.random() * this.topology.length);
+        for (let i = 0; i < this.topology.length; ++i) {
+            if (index > this.topology.length)
+                index = 0;
+            // if any node is welcome, or node is in committee- return
+            if (!committeeOnly || this.committee.has(this.topology[index].EthAddress))
+                return this.topology[index];
+            index++;
+        }
     }
+}
