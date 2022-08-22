@@ -30,6 +30,7 @@
   "homepage": "https://github.com/orbs-network/orbs-client#readme",
   "dependencies": {
     "@types/node": "17.x",
+    "axios": "^0.27.2",
     "typescript": "4.x"
   },
   "devDependencies": {
