@@ -1,7 +1,15 @@
-import { Nodes } from "./nodes";
+import { Nodes } from './nodes';
+export const create = () => {
+    return new Nodes();
+}
 
-export const create = async (seed?: Array<string>): Promise<Nodes> => {
-    const nodes = new Nodes();
-    await nodes.init(seed);
-    return nodes;
+// sanity
+async function sanity() {
+    const client = create()
+    await client.init();
+    const node = client.getRandomNode();
+    console.log(node);
+}
+if (require.main === module) {
+    sanity();
 }

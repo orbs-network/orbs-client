@@ -7,7 +7,9 @@ import { create } from '../index';
 
 test('Create', async () => {
     const orbsClient = create();
-    expect(orbsClient !== undefined);
-    // await orbsClient.init();
-    // expect(orbsClient.getNextNode()?.Name === 'NEOPLY');
+    expect(orbsClient).toBeDefined();
+    await orbsClient.init();
+    const node = orbsClient.getNextNode();
+    expect(node).toBeDefined();
+    expect(node?.Name).toBe('Wings Stiftung');
 });

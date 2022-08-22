@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { captureRejectionSymbol } from 'events';
-var localSeed = require('./seed.json');
-
+import localSeed from './seed.json';
 interface Node {
     Name: string;
     Ip: number;
@@ -49,13 +47,13 @@ export class Nodes {
         for (const s of seed) {
             const url = `http://${s}/services/management-service/status`
             const res: any = await axios.get(url).catch(e => { console.error(`axios exception in seed ${s}:`, e) });
-            if (res.Payload)
-                return res.Payload;
+            if (res.data?.Payload)
+                return res.data.Payload;
         }
         return null;
     }
     ///////////////////////////////////
-    getNextNode(committeeOnly: Boolean) {
+    getNextNode(committeeOnly: Boolean = true) {
         const startIndex = this.nodeIndex + 1;
         while (this.nodeIndex != startIndex) {
             if (this.nodeIndex > this.topology.length)
@@ -69,13 +67,13 @@ export class Nodes {
 
     }
     ///////////////////////////////////
-    getRandomNode(committeeOnly: Boolean) {
+    getRandomNode(committeeOnly: Boolean = true) {
         this.topology.length;
         let index = Math.floor(Math.random() * this.topology.length);
         for (let i = 0; i < this.topology.length; ++i) {
             if (index > this.topology.length)
                 index = 0;
-            // if any node is welcome, or node is in committee- return
+            // if any node is welcome, or node is in committee- returnx
             if (!committeeOnly || this.committee.has(this.topology[index].EthAddress))
                 return this.topology[index];
             index++;
