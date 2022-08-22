@@ -1,8 +1,9 @@
 {
   "name": "@orbs-network/orbs-client",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Client side gateway to access ORBS nodes by IP randomly or round robin",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib /**/*"
   ],
@@ -14,7 +15,8 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
-    "version": "npm run format && git add -A src"
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
