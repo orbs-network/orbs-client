@@ -45,6 +45,8 @@ const seed = [
 ];
 client.init(seed);
 ```
+
+> TODO: init with infura to get the committee from ethereum network
 ### getRandomNode
 ```JS
 // select weather to get any node or only a node from orbs 21 node committee
