@@ -1,6 +1,6 @@
 {
   "name": "@orbs-network/orbs-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Client side gateway to access ORBS nodes by IP randomly or round robin",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
