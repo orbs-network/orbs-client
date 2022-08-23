@@ -5,10 +5,12 @@ export const create = () => {
 
 // sanity
 async function sanity() {
-    const client = create()
+    const client = create();
     await client.init();
-    const node = client.getRandomNode();
-    console.log(node);
+    let node;
+    node = client.getNextNode();
+    node = client.getNextNode();
+    node = client.getRandomNode();
 }
 if (require.main === module) {
     sanity();
