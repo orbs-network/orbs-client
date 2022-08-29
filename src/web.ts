@@ -1,7 +1,9 @@
-import { Nodes } from "./nodes";
+import { Nodes } from './nodes';
 
 declare global {
-    interface Window { orbsClient: any; }
+  interface Window {
+    orbsClient: any;
+  }
 }
 
 window.orbsClient = new Nodes();

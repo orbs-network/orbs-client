@@ -49,12 +49,10 @@ export class Nodes {
     for (const s of seed) {
       const url = `http://${s}/services/management-service/status`;
       try {
-        const response = await fetch(url)
+        const response = await fetch(url);
         const data = await response.json();
-        if (data.Payload)
-          return data.Payload;
-      }
-      catch (e) {
+        if (data.Payload) return data.Payload;
+      } catch (e) {
         console.error(`exception in fetch loadSeed ${s}:`, e);
       }
     }
@@ -68,8 +66,7 @@ export class Nodes {
     while (true) {
       this.nodeIndex++;
       // out of range
-      if (this.nodeIndex > this.topology.length)
-        this.nodeIndex = 0;
+      if (this.nodeIndex > this.topology.length) this.nodeIndex = 0;
       // if any node is welcome, or node is in committee- return
       if (!committeeOnly || this.committee.has(this.topology[this.nodeIndex].EthAddress))
         return this.topology[this.nodeIndex];
@@ -86,5 +83,3 @@ export class Nodes {
     }
   }
 }
-
-

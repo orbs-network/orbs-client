@@ -1,7 +1,7 @@
-import { Nodes } from "./nodes"
+import { Nodes } from './nodes';
 
 export function create() {
-    return new Nodes;
+  return new Nodes();
 }
 
 // debug
