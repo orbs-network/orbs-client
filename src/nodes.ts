@@ -49,7 +49,7 @@ export class Nodes {
     for (const s of seed) {
       const url = `http://${s}/services/management-service/status`;
       try {
-        let response = await fetch(url)
+        const response = await fetch(url)
         const data = await response.json();
         if (data.Payload)
           return data.Payload;

@@ -11,7 +11,7 @@
     "build:web:reg": "esbuild ./lib/web.js --bundle  --sourcemap --target=es5 --outfile=./dist/index.js",
     "build:web:min": "esbuild ./lib/web.js --bundle  --minify    --target=es5 --outfile=./dist/index.min.js",
     "build:web": "rimraf ./dist && npm run build:web:reg && npm run build:web:min",
-    "build": "rimraf ./lib && tsc && npm run build:web",
+    "build": "npm run lint && rimraf ./lib && tsc && npm run build:web",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "prepare": "npm run build",
