@@ -11,7 +11,8 @@ npm install @orbs-network/orbs-client
 const client = import "@orbs-network/orbs-client"
 
 async function start(){
-    await client.init();
+    nodes =  new Client();
+    await  client.init();
     // get a live ORBS node IP
     const node = client.getRandomNode();
     // get nodes status
@@ -64,3 +65,44 @@ const node = client.getNextNode(committeeOnly)
 ```
 
 > Please notice the health of the node is checked every 10 minutes. Its the user's responsibility to call another node upon a failure.
+
+## webpage example
+
+```html
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello Typescript</title>
+</head>
+<body>
+    <div name="container">
+        <h2 id="title">Orbs Network Topology</h2>
+        <div id="orbs-nodes">
+        </div>
+        <script type="text/javascript" src="../dist/index.min.js"></script>
+        <script type="text/javascript">
+            // onLoad
+            document.addEventListener('DOMContentLoaded', function () {
+                // init orbs client
+                window.orbsClient.init().then(() => {
+                    // get container
+                    let orbsNodes = document.getElementById("orbs-nodes");
+                    // enum orbs-nodes
+                    for (let i = 0; i < 22; ++i) {
+                        let node = window.orbsClient.getNextNode();
+                        // append element
+                        let code = document.createElement("code");
+                        code.innerHTML = JSON.stringify(node, null, 2);
+                        let div = document.createElement("div");
+                        div.appendChild(code)
+                        orbsNodes.appendChild(div);
+                    }
+                });
+            }, false);
+        </script>
+</body>
+
+</html>
+```

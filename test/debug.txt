@@ -1,0 +1,14 @@
+import { Nodes } from '../src/nodes';
+
+// sanity
+async function sanity() {
+  const client = new Nodes();//create();
+  await client.init();
+  let node;
+  node = client.getNextNode();
+  node = client.getNextNode();
+  node = client.getRandomNode();
+}
+if (require.main === module) {
+  sanity();
+}

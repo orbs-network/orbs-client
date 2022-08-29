@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "debug nodes",
             "program": "${workspaceFolder}/src/index.ts",
             //"preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [

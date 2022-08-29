@@ -1,5 +1,7 @@
 import axios from 'axios';
+import 'isomorphic-fetch';
 import localSeed from './seed.json';
+
 interface Node {
   Name: string;
   Ip: number;
@@ -46,31 +48,31 @@ export class Nodes {
     // fetch status of any of the seed
     for (const s of seed) {
       const url = `http://${s}/services/management-service/status`;
-      const res: any = await axios.get(url).catch((e) => {
-        console.error(`axios exception in seed ${s}:`, e);
-      });
-      if (res.data?.Payload) return res.data.Payload;
+      try {
+        let response = await fetch(url)
+        const data = await response.json();
+        if (data.Payload)
+          return data.Payload;
+      }
+      catch (e) {
+        console.error(`exception in fetch loadSeed ${s}:`, e);
+      }
     }
     return null;
   }
   ///////////////////////////////////
   // a generator function
-  *nextNodeIndex(): IterableIterator<number> {
-    while (true) {
-      this.nodeIndex++;
-      if (this.nodeIndex > this.topology.length) this.nodeIndex = 0;
 
-      yield this.nodeIndex;
-    }
-  }
   ///////////////////////////////////
   getNextNode(committeeOnly: boolean = true) {
-    // const startIndex = this.nodeIndex;
-    // let index;
-    // while ((index = this.nextNodeIndex()) !== startIndex) {
-    for (const index of this.nextNodeIndex()) {
+    while (true) {
+      this.nodeIndex++;
+      // out of range
+      if (this.nodeIndex > this.topology.length)
+        this.nodeIndex = 0;
       // if any node is welcome, or node is in committee- return
-      if (!committeeOnly || this.committee.has(this.topology[index].EthAddress)) return this.topology[index];
+      if (!committeeOnly || this.committee.has(this.topology[this.nodeIndex].EthAddress))
+        return this.topology[this.nodeIndex];
     }
   }
   ///////////////////////////////////
@@ -84,3 +86,5 @@ export class Nodes {
     }
   }
 }
+
+

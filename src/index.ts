@@ -1,17 +1,18 @@
-import { Nodes } from './nodes';
-export const create = () => {
-  return new Nodes();
-};
+import { Nodes } from "./nodes"
 
-// sanity
-async function sanity() {
-  const client = create();
-  await client.init();
-  let node;
-  node = client.getNextNode();
-  node = client.getNextNode();
-  node = client.getRandomNode();
+export function create() {
+    return new Nodes;
 }
-if (require.main === module) {
-  sanity();
-}
+
+// debug
+// async function sanity() {
+//     const client = new Nodes();//create();
+//     await client.init();
+//     let node;
+//     node = client.getNextNode();
+//     node = client.getNextNode();
+//     node = client.getRandomNode();
+// }
+// if (require.main === module) {
+//     sanity();
+// }
