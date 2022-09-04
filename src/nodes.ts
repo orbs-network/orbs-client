@@ -77,7 +77,7 @@ export class Nodes {
     let index = Math.floor(Math.random() * this.topology.length);
     while (true) {
       index++;
-      if (index > this.topology.length) index = 0;
+      if (index >= this.topology.length) index = 0;
       // if any node is welcome, or node is in committee- return
       if (!committeeOnly || this.committee.has(this.topology[index].EthAddress)) return this.topology[index];
     }
