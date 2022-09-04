@@ -725,7 +725,7 @@
           }
           while (true) {
             this.nodeIndex++;
-            if (this.nodeIndex > this.topology.length)
+            if (this.nodeIndex >= this.topology.length)
               this.nodeIndex = 0;
             if (!committeeOnly || this.committee.has(this.topology[this.nodeIndex].EthAddress))
               return this.topology[this.nodeIndex];

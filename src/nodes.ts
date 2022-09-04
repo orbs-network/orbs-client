@@ -66,7 +66,7 @@ export class Nodes {
     while (true) {
       this.nodeIndex++;
       // out of range
-      if (this.nodeIndex > this.topology.length) this.nodeIndex = 0;
+      if (this.nodeIndex >= this.topology.length) this.nodeIndex = 0;
       // if any node is welcome, or node is in committee- return
       if (!committeeOnly || this.committee.has(this.topology[this.nodeIndex].EthAddress))
         return this.topology[this.nodeIndex];
