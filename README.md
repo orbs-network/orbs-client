@@ -1,108 +1,425 @@
 # orbs-client
-Client side gateway to access ORBS nodes by IP randomly or round robin
+Client side gateway to access ORBS nodes by IP with filtering and iteration support
 
 ## Install
-```
+```bash
 npm install @orbs-network/orbs-client
 ```
 
 ## Get Started
-```js
-const client = import "@orbs-network/orbs-client"
 
-async function start(){
-    nodes =  new Client();
-    await  client.init();
-    // get a live ORBS node IP
-    const node = client.getRandomNode();
-    // get nodes status
-    const url = 'http://'+node.Ip+'/services/management-service/status';
-    const response = await axios.get(url);
-    console.log(`${node.Name} status`)
-    console.log(response);
+### Basic Usage
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+async function example() {
+  // Create client with a seed node IP
+  const seedIP = '13.112.58.64';
+  const client = new Client(seedIP);
+  
+  // Initialize - fetches topology and committee data
+  await client.init();
+  
+  // Check if initialized
+  if (client.initialized()) {
+    console.log('Client initialized successfully');
+  }
 }
 ```
 
-## API
+## Filtering Nodes
 
-### Node (type)
-```JSON
-{
-    "EthAddress": "0874bc1383958e2475df73dc68c4f09658e23777",
-    "OrbsAddress": "067a8afdc6d7bafa0ccaa5bb2da867f454a34dfa",
-    "Ip": "46.101.165.46",
-    "Port": 0,
-    "Name": "Wings Stiftung"
+The `getNodes()` method accepts an optional `NodeFilter` object to filter nodes based on various criteria. All filter options are optional and can be combined.
+
+### Filter Options
+
+#### `committeeOnly?: boolean`
+When set to `true`, returns only nodes that are members of the current committee.
+
+```typescript
+// Get only committee nodes
+const committeeNodes = await client.getNodes({ committeeOnly: true });
+
+// Get all nodes (committee and non-committee)
+const allNodes = await client.getNodes({ committeeOnly: false });
+// or simply
+const allNodes = await client.getNodes();
+```
+
+#### `onlineOnly?: boolean`
+When set to `true`, the client will check each node's status by fetching from its management service endpoint. Only nodes that respond successfully will be returned.
+
+**Important Notes:**
+- Status checks are performed in parallel with a 5-second timeout per node
+- This operation may take several seconds depending on network conditions
+- Each node's `online` property will be set to `true` for returned nodes
+- The `updatedTime` field stores when the status was checked
+- The `statusData` field contains the full status JSON response
+
+```typescript
+// Get only online nodes
+const onlineNodes = await client.getNodes({ onlineOnly: true });
+
+// Get online committee nodes
+const onlineCommittee = await client.getNodes({ 
+  committeeOnly: true,
+  onlineOnly: true 
+});
+```
+
+#### `teeHardware?: boolean`
+Filters nodes based on whether they have TEE (Trusted Execution Environment) hardware.
+
+```typescript
+// Get nodes with TEE hardware
+const teeNodes = await client.getNodes({ teeHardware: true });
+
+// Get nodes without TEE hardware
+const nonTeeNodes = await client.getNodes({ teeHardware: false });
+```
+
+### Combining Filters
+
+You can combine multiple filters to get exactly the nodes you need:
+
+```typescript
+// Get online committee nodes without TEE hardware
+const filtered = await client.getNodes({
+  committeeOnly: true,
+  onlineOnly: true,
+  teeHardware: false
+});
+```
+
+**Filter Order:**
+1. First, `committeeOnly` filter is applied (if specified)
+2. Then, `teeHardware` filter is applied (if specified)
+3. Finally, `onlineOnly` filter is applied (if specified) - this checks status for each remaining node
+
+### Filter Examples
+
+```typescript
+// Example 1: All committee nodes
+const committee = await client.getNodes({ committeeOnly: true });
+
+// Example 2: All online nodes (checks all nodes in topology)
+const online = await client.getNodes({ onlineOnly: true });
+
+// Example 3: Online committee nodes
+const onlineCommittee = await client.getNodes({
+  committeeOnly: true,
+  onlineOnly: true
+});
+
+// Example 4: Committee nodes with TEE hardware
+const teeCommittee = await client.getNodes({
+  committeeOnly: true,
+  teeHardware: true
+});
+
+// Example 5: Online committee nodes without TEE hardware
+const onlineNonTeeCommittee = await client.getNodes({
+  committeeOnly: true,
+  onlineOnly: true,
+  teeHardware: false
+});
+```
+
+## Getting Nodes
+
+### Get Committee Nodes
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+// Get only committee nodes
+const committeeNodes = await client.getNodes({ committeeOnly: true });
+
+// Iterate through committee nodes
+let node = committeeNodes.next();
+while (node !== null) {
+  console.log(`Committee Node: ${node.name} (${node.ip})`);
+  console.log(`Effective Stake: ${node.effectiveStake}`);
+  node = committeeNodes.next();
+}
+
+// Or get by index
+const firstCommitteeNode = committeeNodes.get(0);
+const lastCommitteeNode = committeeNodes.get(-1); // -1 means last
+
+// Get count
+console.log(`Committee size: ${committeeNodes.size()}`);
+```
+
+### Get All Topology Nodes
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+// Get all nodes (topology)
+const allNodes = await client.getNodes();
+
+// Iterate through all nodes
+let node = allNodes.next();
+while (node !== null) {
+  console.log(`Node: ${node.name}`);
+  console.log(`In Committee: ${node.inCommittee}`);
+  node = allNodes.next();
+}
+
+// Get total count
+console.log(`Total nodes: ${allNodes.size()}`);
+```
+
+### Get Online Nodes Only
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+// Get online committee nodes (checks each node's status)
+const onlineCommitteeNodes = await client.getNodes({ 
+  committeeOnly: true,
+  onlineOnly: true 
+});
+
+// All returned nodes are guaranteed to be online
+let node = onlineCommitteeNodes.next();
+while (node !== null) {
+  console.log(`Online Node: ${node.name}`);
+  console.log(`Status checked at: ${node.updatedTime}`);
+  console.log(`Status data:`, node.statusData);
+  node = onlineCommitteeNodes.next();
 }
 ```
 
-### init
-```JS
-// optional array of seed HostNames of nodes
-// if node provided- a hard coded array is used
-const seed = [
-    '54.95.108.148',
-    '0xcore.orbs.network'
-];
-client.init(seed);
+> **Note:** When `onlineOnly: true`, the client fetches status from each node's management service endpoint. This may take a few seconds as it checks nodes in parallel with a 5-second timeout per node.
+
+### Filter by TEE Hardware
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+// Get nodes without TEE hardware
+const nonTeeNodes = await client.getNodes({ 
+  teeHardware: false 
+});
+
+// Get nodes with TEE hardware
+const teeNodes = await client.getNodes({ 
+  teeHardware: true 
+});
 ```
 
-> TODO: init with infura to get the committee from ethereum network
-### getRandomNode
-```JS
-// select weather to get any node or only a node from orbs 21 node committee
-const committeeOnly = true;
-// use random index to select the node.
-const node = client.getRandomNode(committeeOnly)
+### Combined Filters
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+// Get online committee nodes without TEE hardware
+const filteredNodes = await client.getNodes({
+  committeeOnly: true,
+  onlineOnly: true,
+  teeHardware: false
+});
 ```
 
-### getNextNode
-```JS
-// select weather to get any node or only a node from orbs 21 node committee
-const committeeOnly = false;
-// uses round robin to fetch next node
-const node = client.getNextNode(committeeOnly)
+## Node Properties
+
+Each node object contains the following properties:
+
+```typescript
+interface Node {
+  name: string;                    // Node name
+  ip: string;                      // Node IP address
+  port: number;                     // Node port
+  website: string;                 // Guardian website
+  guardianAddress: string;          // Ethereum address (guardian)
+  nodeAddress: string;              // Orbs address
+  reputation: number;               // Node reputation
+  online: boolean;                 // Online status (updated when onlineOnly filter is used)
+  effectiveStake: number;           // Effective stake (sorted descending)
+  enterTime: number;                // Timestamp when guardian entered
+  weight: number;                   // Guardian weight
+  inCommittee: boolean;             // Whether node is in committee
+  updatedTime?: number;             // Timestamp when status was last checked
+  statusData?: any;                 // Full status JSON from node
+  teeHardware?: boolean;            // Whether node has TEE hardware
+}
 ```
 
-> Please notice the health of the node is checked every 10 minutes. Its the user's responsibility to call another node upon a failure.
+## API Reference
 
-## webpage example
+### Client
+
+#### `constructor(seedIP: string)`
+Creates a new Client instance with a seed node IP address.
+
+```typescript
+const client = new Client('13.112.58.64');
+```
+
+#### `async init(): Promise<void>`
+Initializes the client by fetching topology and committee data from the seed node.
+
+```typescript
+await client.init();
+```
+
+#### `initialized(): boolean`
+Returns `true` if the client has been successfully initialized.
+
+```typescript
+if (client.initialized()) {
+  // Safe to call getNodes()
+}
+```
+
+#### `async getNodes(filter?: NodeFilter): Promise<Nodes>`
+Returns a `Nodes` iterator with filtered nodes.
+
+**Filter Options:**
+- `committeeOnly?: boolean` - If `true`, only returns nodes in the committee
+- `onlineOnly?: boolean` - If `true`, checks each node's status and only returns online nodes
+- `teeHardware?: boolean` - Filter by TEE hardware presence (`true`/`false`)
+
+```typescript
+const nodes = await client.getNodes({ 
+  committeeOnly: true,
+  onlineOnly: true 
+});
+```
+
+### Nodes Iterator
+
+#### `next(): Node | null`
+Returns the next node in the iterator, or `null` when iteration is complete.
+
+```typescript
+let node = nodes.next();
+while (node !== null) {
+  console.log(node.name);
+  node = nodes.next();
+}
+```
+
+#### `get(index: number): Node | null`
+Gets a node by index. Use `-1` to get the last node.
+
+```typescript
+const first = nodes.get(0);
+const last = nodes.get(-1);
+```
+
+#### `size(): number`
+Returns the total number of nodes in the iterator.
+
+```typescript
+const count = nodes.size();
+```
+
+## Sorting
+
+Nodes are automatically sorted by `effectiveStake` in descending order (highest stake first). This ensures that when you iterate through nodes, you get them in order of stake.
+
+## Complete Example
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+async function main() {
+  const seedIP = '13.112.58.64';
+  const client = new Client(seedIP);
+  
+  try {
+    await client.init();
+    
+    if (!client.initialized()) {
+      console.error('Failed to initialize client');
+      return;
+    }
+    
+    // Get online committee nodes
+    const onlineCommittee = await client.getNodes({
+      committeeOnly: true,
+      onlineOnly: true
+    });
+    
+    console.log(`Found ${onlineCommittee.size()} online committee nodes`);
+    
+    // Iterate through nodes
+    let node = onlineCommittee.next();
+    while (node !== null) {
+      console.log(`\n${node.name}`);
+      console.log(`  IP: ${node.ip}:${node.port}`);
+      console.log(`  Stake: ${node.effectiveStake}`);
+      console.log(`  Guardian: ${node.guardianAddress}`);
+      console.log(`  Online: ${node.online}`);
+      
+      node = onlineCommittee.next();
+    }
+    
+    // Get first and last nodes
+    const firstNode = onlineCommittee.get(0);
+    const lastNode = onlineCommittee.get(-1);
+    
+    if (firstNode && lastNode) {
+      console.log(`\nHighest stake: ${firstNode.effectiveStake}`);
+      console.log(`Lowest stake: ${lastNode.effectiveStake}`);
+    }
+    
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+main();
+```
+
+## Browser Usage
+
+For browser usage, include the bundled script:
 
 ```html
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello Typescript</title>
-</head>
-<body>
-    <div name="container">
-        <h2 id="title">Orbs Network Topology</h2>
-        <div id="orbs-nodes">
-        </div>
-        <script type="text/javascript" src="../dist/index.min.js"></script>
-        <script type="text/javascript">
-            // onLoad
-            document.addEventListener('DOMContentLoaded', function () {
-                // init orbs client
-                window.orbsClient.init().then(() => {
-                    // get container
-                    let orbsNodes = document.getElementById("orbs-nodes");
-                    // enum orbs-nodes
-                    for (let i = 0; i < 22; ++i) {
-                        let node = window.orbsClient.getNextNode();
-                        // append element
-                        let code = document.createElement("code");
-                        code.innerHTML = JSON.stringify(node, null, 2);
-                        let div = document.createElement("div");
-                        div.appendChild(code)
-                        orbsNodes.appendChild(div);
-                    }
-                });
-            }, false);
-        </script>
-</body>
-
-</html>
+<script src="https://unpkg.com/@orbs-network/orbs-client/dist/index.min.js"></script>
+<script>
+  async function init() {
+    const seedIP = '13.112.58.64';
+    const client = new window.orbsClient.Client(seedIP);
+    
+    await client.init();
+    
+    const nodes = await client.getNodes({ committeeOnly: true });
+    let node = nodes.next();
+    while (node !== null) {
+      console.log(node.name);
+      node = nodes.next();
+    }
+  }
+  
+  init();
+</script>
 ```
+
+## Notes
+
+- Nodes are sorted by `effectiveStake` in descending order
+- When using `onlineOnly: true`, status is checked with a 5-second timeout per node
+- Status checks are performed in parallel for better performance
+- The `updatedTime` field stores when the node's status was last checked
+- The `statusData` field contains the full status JSON response from the node
