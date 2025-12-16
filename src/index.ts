@@ -1,18 +1,4 @@
-import { Nodes } from './nodes';
-
-export function create() {
-  return new Nodes();
-}
-
-// debug
-// async function sanity() {
-//     const client = new Nodes();//create();
-//     await client.init();
-//     let node;
-//     node = client.getNextNode();
-//     node = client.getNextNode();
-//     node = client.getRandomNode();
-// }
-// if (require.main === module) {
-//     sanity();
-// }
+export { Client } from './client';
+export type { NodeFilter } from './client';
+export { Node } from './node';
+export { Nodes } from './nodes';

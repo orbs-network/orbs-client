@@ -1,85 +1,33 @@
-import axios from 'axios';
-import 'isomorphic-fetch';
-import localSeed from './seed.json';
+import { Node } from './node';
 
-interface Node {
-  Name: string;
-  Ip: number;
-  EthAddress: string;
-  OrbsAddress: string;
-}
-///////////////////////////////////
 export class Nodes {
-  ///////////////////////////////////
-  committee: Set<string>;
-  topology: Node[];
-  ///////////////////////////////////
-  nodeIndex: number;
-  ///////////////////////////////////
-  constructor() {
-    this.nodeIndex = -1;
-    this.committee = new Set<string>();
-    this.topology = [];
-  }
-  ///////////////////////////////////
-  async init(seed?: string[]) {
-    // cleanup
-    this.nodeIndex = -1;
-    this.committee.clear();
-    this.topology = [];
+  private nodes: Node[];
+  private nodeIndex: number;
 
-    if (typeof seed === 'undefined') {
-      seed = localSeed;
-    }
-    const payload: any = await this.loadSeed(seed as string[]);
-    if (!payload) {
-      console.error('none of the seed returned a valid status');
-      return;
-    }
-    // assign topology
-    this.topology = payload.CurrentTopology as Node[];
-    // save committee
-    for (const member of payload.CurrentCommittee) {
-      this.committee.add(member.EthAddress);
-    }
+  constructor(nodes: Node[]) {
+    this.nodes = nodes;
+    this.nodeIndex = -1;
   }
-  ///////////////////////////////////
-  async loadSeed(seed: string[]) {
-    // fetch status of any of the seed
-    for (const s of seed) {
-      const url = `http://${s}/services/management-service/status`;
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.Payload) return data.Payload;
-      } catch (e) {
-        console.error(`exception in fetch loadSeed ${s}:`, e);
-      }
-    }
-    return null;
-  }
-  ///////////////////////////////////
-  // a generator function
 
-  ///////////////////////////////////
-  getNextNode(committeeOnly: boolean = true) {
-    while (true) {
-      this.nodeIndex++;
-      // out of range
-      if (this.nodeIndex >= this.topology.length) this.nodeIndex = 0;
-      // if any node is welcome, or node is in committee- return
-      if (!committeeOnly || this.committee.has(this.topology[this.nodeIndex].EthAddress))
-        return this.topology[this.nodeIndex];
-    }
+  size(): number {
+    return this.nodes.length;
   }
-  ///////////////////////////////////
-  getRandomNode(committeeOnly: boolean = true) {
-    let index = Math.floor(Math.random() * this.topology.length);
-    while (true) {
-      index++;
-      if (index >= this.topology.length) index = 0;
-      // if any node is welcome, or node is in committee- return
-      if (!committeeOnly || this.committee.has(this.topology[index].EthAddress)) return this.topology[index];
+
+  next(): Node | null {
+    this.nodeIndex++;
+    if (this.nodeIndex >= this.nodes.length) {
+      return null;
     }
+    return this.nodes[this.nodeIndex];
+  }
+
+  get(index: number): Node | null {
+    if (index === -1) {
+      return this.nodes.length > 0 ? this.nodes[this.nodes.length - 1] : null;
+    }
+    if (index < 0 || index >= this.nodes.length) {
+      return null;
+    }
+    return this.nodes[index];
   }
 }
