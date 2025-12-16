@@ -1,3 +1,15 @@
+# ignore all files in test directory
+ignore/
+dist/
+.DS_Store
+.vscode
+.idea
+.env
+.env.test
+.env.development
+.env.production
+
+
 # Logs
 logs
 *.log
@@ -102,5 +114,3 @@ typings/
 
 # TernJS port file
 .tern-port
-
-/lib
