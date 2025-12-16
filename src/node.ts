@@ -46,12 +46,11 @@ export class Node {
 
   async updateStatus(timeoutMs: number = 5000): Promise<void> {
     const url = `http://${this.ip}:${this.port}/services/management-service/status`;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+    try {
       const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
 
       if (response.ok) {
         const statusData = await response.json();
@@ -65,6 +64,8 @@ export class Node {
     } catch (e) {
       this.online = false;
       this.updatedTime = Date.now();
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 }
