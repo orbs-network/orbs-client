@@ -1,6 +1,15 @@
 # ignore all files in test directory
 ignore/
 dist/
+.DS_Store
+.vscode
+.idea
+.env
+.env.test
+.env.development
+.env.production
+.env.test
+
 
 # Logs
 logs
