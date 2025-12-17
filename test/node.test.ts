@@ -61,12 +61,10 @@ test('node.get RPC call', async () => {
   const response = await node!.get('signer/status');
 
   expect(response).toBeDefined();
-  // Print response status
-  console.log(`Response status: ${response.status} ${response.statusText}`);
 
   // Response may or may not be ok depending on node availability
   // But we should get a response object
-  expect(response.status).toBeDefined();
+  expect(response.status).toEqual(200);
 
   // If response is ok, verify we can parse JSON
   if (response.ok) {

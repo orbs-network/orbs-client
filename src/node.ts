@@ -74,11 +74,12 @@ export class Node {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     // If port is 0, omit it (use default HTTP port 80)
     const portPart = this.port === 0 ? '' : `:${this.port}`;
-    return `http://${this.ip}${portPart}/service${normalizedPath}`;
+    return `http://${this.ip}${portPart}/services${normalizedPath}`;
   }
 
   async get(path: string, timeoutMs: number = 5000): Promise<Response> {
     const url = this.buildServiceUrl(path);
+    console.log(`Node GET ${url}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
