@@ -29,4 +29,7 @@ export declare class Node {
         teeHardware?: boolean;
     });
     updateStatus(timeoutMs?: number): Promise<void>;
+    private buildServiceUrl;
+    get(path: string, timeoutMs?: number): Promise<Response>;
+    post(path: string, body?: any, timeoutMs?: number): Promise<Response>;
 }

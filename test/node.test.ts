@@ -46,3 +46,30 @@ test('first committee node has all fields populated', async () => {
   expect(firstNode!.teeHardware).toBeDefined(); // Should be boolean (true or false)
 });
 
+test('node.get RPC call', async () => {
+  if (!client.initialized()) {
+    await client.init();
+  }
+
+  // Get first committee node
+  const committeeNodes = await client.getNodes({ committeeOnly: true });
+  const node = committeeNodes.get(0);
+
+  expect(node).not.toBeNull();
+
+  // Test GET RPC call to signer/status endpoint
+  const response = await node!.get('signer/status');
+
+  expect(response).toBeDefined();
+
+  // Response may or may not be ok depending on node availability
+  // But we should get a response object
+  expect(response.status).toEqual(200);
+
+  // If response is ok, verify we can parse JSON
+  if (response.ok) {
+    const data = await response.json();
+    expect(data).toBeDefined();
+  }
+});
+
