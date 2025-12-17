@@ -263,6 +263,161 @@ interface Node {
 }
 ```
 
+## RPC Calls
+
+Each `Node` instance provides methods to make RPC calls directly to the node's service endpoints. These methods allow you to interact with the node's management and other services.
+
+### GET Requests
+
+The `get()` method makes an HTTP GET request to a node's service endpoint.
+
+```typescript
+async get(path: string, timeoutMs?: number): Promise<Response>
+```
+
+**Parameters:**
+- `path: string` - The service endpoint path (e.g., `'signer/status'` or `'/management-service/status'`)
+- `timeoutMs?: number` - Optional timeout in milliseconds (default: 5000)
+
+**Returns:** A `Promise<Response>` that resolves to a `Response` object (standard fetch API response)
+
+**Example:**
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+// Get a node
+const nodes = await client.getNodes({ committeeOnly: true });
+const node = nodes.get(0);
+
+if (node) {
+  // Make GET request to signer status endpoint
+  const response = await node.get('signer/status');
+  
+  if (response.ok) {
+    const data = await response.json();
+    console.log('Signer status:', data);
+  } else {
+    console.error('Request failed:', response.status);
+  }
+  
+  // With custom timeout
+  const quickResponse = await node.get('signer/status', 2000);
+}
+```
+
+**URL Construction:**
+The method automatically constructs the full URL as:
+- `http://{node.ip}:{node.port}/services/{path}`
+- If `port` is `0`, the port is omitted (defaults to port 80)
+- Leading slashes in the path are normalized
+
+### POST Requests
+
+The `post()` method makes an HTTP POST request to a node's service endpoint.
+
+```typescript
+async post(path: string, body?: any, timeoutMs?: number): Promise<Response>
+```
+
+**Parameters:**
+- `path: string` - The service endpoint path
+- `body?: any` - Optional request body. Can be:
+  - `string` - Sent as `text/plain`
+  - `object` - Automatically JSON stringified and sent as `application/json`
+  - `undefined` - No body is sent
+- `timeoutMs?: number` - Optional timeout in milliseconds (default: 5000)
+
+**Returns:** A `Promise<Response>` that resolves to a `Response` object (standard fetch API response)
+
+**Example:**
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+const client = new Client('13.112.58.64');
+await client.init();
+
+const nodes = await client.getNodes({ committeeOnly: true });
+const node = nodes.get(0);
+
+if (node) {
+  // POST with JSON object
+  const jsonBody = { action: 'start', params: { key: 'value' } };
+  const response = await node.post('management-service/command', jsonBody);
+  
+  if (response.ok) {
+    const result = await response.json();
+    console.log('Command result:', result);
+  }
+  
+  // POST with string body
+  const stringResponse = await node.post('some-endpoint', 'plain text data');
+  
+  // POST without body
+  const noBodyResponse = await node.post('trigger-action');
+}
+```
+
+**Content-Type Handling:**
+- If `body` is a `string`: Sets `Content-Type: text/plain`
+- If `body` is an `object`: Sets `Content-Type: application/json` and JSON stringifies the body
+- If `body` is `undefined`: No `Content-Type` header is set and no body is sent
+
+### RPC Call Examples
+
+```typescript
+import { Client } from '@orbs-network/orbs-client';
+
+async function rpcExamples() {
+  const client = new Client('13.112.58.64');
+  await client.init();
+  
+  // Get online committee nodes
+  const nodes = await client.getNodes({ 
+    committeeOnly: true,
+    onlineOnly: true 
+  });
+  
+  // Iterate through nodes and make RPC calls
+  let node = nodes.next();
+  while (node !== null) {
+    try {
+      // GET request example
+      const statusResponse = await node.get('signer/status');
+      if (statusResponse.ok) {
+        const status = await statusResponse.json();
+        console.log(`${node.name} status:`, status);
+      }
+      
+      // POST request example
+      const commandResponse = await node.post('management-service/command', {
+        action: 'get-info'
+      });
+      
+      if (commandResponse.ok) {
+        const info = await commandResponse.json();
+        console.log(`${node.name} info:`, info);
+      }
+    } catch (error) {
+      console.error(`Error calling ${node.name}:`, error);
+    }
+    
+    node = nodes.next();
+  }
+}
+```
+
+**Important Notes:**
+- Both `get()` and `post()` methods use `AbortController` for timeout handling
+- If a timeout occurs, the request is aborted and the promise may reject
+- The default timeout is 5 seconds (5000ms)
+- Always check `response.ok` before parsing JSON
+- Handle errors appropriately as network requests can fail
+
 ## API Reference
 
 ### Client
