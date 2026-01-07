@@ -2,9 +2,10 @@
   "name": "@orbs-network/orbs-client",
   "version": "1.1.0",
   "description": "Client side gateway to access ORBS nodes by IP randomly or round robin",
-  "source": "lib/index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "lib"
   ],
   "scripts": {
     "test": "jest --config jestconfig.json",
